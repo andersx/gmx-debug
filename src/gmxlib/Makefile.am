@@ -91,7 +91,7 @@ CLEANFILES += version.c
 #version.c is only changed if the version actually has changed, and hence
 #rebuilds are only triggered when they are needed.
 version.c: FORCE
-	$(top_srcdir)/src/gmxlib/genversion.sh @VERSION@ $(top_srcdir)
+#	$(top_srcdir)/src/gmxlib/genversion.sh @VERSION@ $(top_srcdir)
 FORCE:
 endif
 
