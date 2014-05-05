@@ -524,6 +524,7 @@ nb_kernel_allvsall_sse2_single(t_forcerec *           fr,
                                int *                  inneriter,
                                void *                 work)
 {
+printf("ASC THIS KERNEL HERE\n");
 	int        natoms;
 	int        ni0,ni1;
 	int        nj0,nj1,nj2,nj3;

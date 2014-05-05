@@ -1,12 +1,12 @@
 /* -*- mode: c; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4; c-file-style: "stroustrup"; -*-
  *
- * 
+ *
  *                This source code is part of
- * 
+ *
  *                 G   R   O   M   A   C   S
- * 
+ *
  *          GROningen MAchine for Chemical Simulations
- * 
+ *
  *                        VERSION 3.2.0
  * Written by David van der Spoel, Erik Lindahl, Berk Hess, and others.
  * Copyright (c) 1991-2000, University of Groningen, The Netherlands.
@@ -17,19 +17,19 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * If you want to redistribute modifications, please consider that
  * scientific software is very special. Version control is crucial -
  * bugs must be traceable. We will be happy to consider code for
  * inclusion in the official distribution, but derived work must not
  * be called official GROMACS. Details are found in the README & COPYING
  * files - if they are missing, get the official version at www.gromacs.org.
- * 
+ *
  * To help us fund GROMACS development, we humbly ask that you cite
  * the papers on the package - you can find them in the top README file.
- * 
+ *
  * For more info, check our website at http://www.gromacs.org
- * 
+ *
  * And Hey:
  * GROningen Mixture of Alchemy and Childrens' Stories
  */
@@ -70,20 +70,20 @@
 
 
 /* 1,4 interactions uses kernel 330 directly */
-#include "nb_kernel_c/nb_kernel330.h" 
+#include "nb_kernel_c/nb_kernel330.h"
 
-#ifdef GMX_PPC_ALTIVEC   
+#ifdef GMX_PPC_ALTIVEC
 #include "nb_kernel_ppc_altivec/nb_kernel_ppc_altivec.h"
 #endif
 
-#if defined(GMX_IA32_SSE) 
+#if defined(GMX_IA32_SSE)
 #include "nb_kernel_ia32_sse/nb_kernel_ia32_sse.h"
 #endif
 
-#if defined(GMX_IA32_SSE2) 
+#if defined(GMX_IA32_SSE2)
 #include "nb_kernel_ia32_sse2/nb_kernel_ia32_sse2.h"
 #endif
- 
+
 #if defined(GMX_X86_64_SSE)
 #include "nb_kernel_x86_64_sse/nb_kernel_x86_64_sse.h"
 #endif
@@ -108,7 +108,7 @@
 #  endif
 #endif
 
-#if (defined GMX_IA64_ASM && defined GMX_DOUBLE) 
+#if (defined GMX_IA64_ASM && defined GMX_DOUBLE)
 #include "nb_kernel_ia64_double/nb_kernel_ia64_double.h"
 #endif
 
@@ -131,8 +131,8 @@ enum { TABLE_NONE, TABLE_COMBINED, TABLE_COUL, TABLE_VDW, TABLE_NR };
 
 /* Table version for each kernel.
  */
-static const int 
-nb_kernel_table[eNR_NBKERNEL_NR] = 
+static const int
+nb_kernel_table[eNR_NBKERNEL_NR] =
 {
   TABLE_NONE,     /* kernel010 */
   TABLE_NONE,     /* kernel020 */
@@ -212,30 +212,30 @@ void
 gmx_setup_kernels(FILE *fplog,gmx_bool bGenericKernelOnly)
 {
     int i;
-        
+
     snew(nb_kernel_list,eNR_NBKERNEL_NR);
-    
+
     /* Note that later calls overwrite earlier, so the preferred (fastest)
      * version should be at the end. For instance, we call SSE after 3DNow.
      */
-    
+
     for(i=0; i<eNR_NBKERNEL_NR; i++)
     {
         nb_kernel_list[i] = NULL;
     }
-    
+
     if (bGenericKernelOnly)
     {
         return;
     }
-	
+
 	if(fplog)
     {
 	    fprintf(fplog,"Configuring nonbonded kernels...\n");
     }
-	
+
     nb_kernel_setup(fplog,nb_kernel_list);
-    
+
     if(getenv("GMX_NOOPTIMIZEDKERNELS") != NULL)
     {
         return;
@@ -245,51 +245,51 @@ gmx_setup_kernels(FILE *fplog,gmx_bool bGenericKernelOnly)
 	 * so we should e.g. test SSE3 support _after_ SSE2 support,
      * and call e.g. Fortran setup before SSE.
 	 */
-    
-#if defined(GMX_FORTRAN) && defined(GMX_DOUBLE)   
+
+#if defined(GMX_FORTRAN) && defined(GMX_DOUBLE)
     nb_kernel_setup_f77_double(fplog,nb_kernel_list);
 #endif
-	
-#if defined(GMX_FORTRAN) && !defined(GMX_DOUBLE)   
+
+#if defined(GMX_FORTRAN) && !defined(GMX_DOUBLE)
     nb_kernel_setup_f77_single(fplog,nb_kernel_list);
 #endif
-	
+
 #ifdef GMX_BLUEGENE
     nb_kernel_setup_bluegene(fplog,nb_kernel_list);
 #endif
-	
+
 #ifdef GMX_POWER6
     nb_kernel_setup_power6(fplog,nb_kernel_list);
 #endif
-    
-#ifdef GMX_PPC_ALTIVEC   
+
+#ifdef GMX_PPC_ALTIVEC
     nb_kernel_setup_ppc_altivec(fplog,nb_kernel_list);
 #endif
-	
+
 #if defined(GMX_IA32_SSE)
     nb_kernel_setup_ia32_sse(fplog,nb_kernel_list);
 #endif
-	
+
 #if defined(GMX_IA32_SSE2)
     nb_kernel_setup_ia32_sse2(fplog,nb_kernel_list);
 #endif
-	
+
 #if defined(GMX_X86_64_SSE)
     nb_kernel_setup_x86_64_sse(fplog,nb_kernel_list);
 #endif
-	
+
 #if defined(GMX_X86_64_SSE2)
     nb_kernel_setup_x86_64_sse2(fplog,nb_kernel_list);
 #endif
 
-#if (defined GMX_IA64_ASM && defined GMX_DOUBLE) 
+#if (defined GMX_IA64_ASM && defined GMX_DOUBLE)
     nb_kernel_setup_ia64_double(fplog,nb_kernel_list);
 #endif
-	
+
 #if (defined GMX_IA64_ASM && !defined GMX_DOUBLE)
     nb_kernel_setup_ia64_single(fplog,nb_kernel_list);
 #endif
-	
+
 	if(fplog)
     {
 	    fprintf(fplog,"\n\n");
@@ -317,16 +317,16 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
 	int             outeriter,inneriter;
 	real *          tabledata = NULL;
 	gmx_gbdata_t    gbdata;
-    
+
     bLR            = (flags & GMX_DONB_LR);
     bDoForces      = (flags & GMX_DONB_FORCES);
-    bForeignLambda = (flags & GMX_DONB_FOREIGNLAMBDA); 
+    bForeignLambda = (flags & GMX_DONB_FOREIGNLAMBDA);
 
 	gbdata.gb_epsilon_solvent = fr->gb_epsilon_solvent;
 	gbdata.epsilon_r = fr->epsilon_r;
 	gbdata.gpol               = egpol;
-    
-    if(fr->bAllvsAll) 
+
+    if(fr->bAllvsAll)
     {
         if(fr->bGB)
         {
@@ -340,7 +340,7 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
             else
             {
                 nb_kernel_allvsallgb(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,egpol,
-                                     &outeriter,&inneriter,&fr->AllvsAll_work);        
+                                     &outeriter,&inneriter,&fr->AllvsAll_work);
             }
 #  else /* not double */
             if(fr->UseOptimizedKernels)
@@ -351,17 +351,17 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
             else
             {
                 nb_kernel_allvsallgb(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,egpol,
-                                     &outeriter,&inneriter,&fr->AllvsAll_work);        
+                                     &outeriter,&inneriter,&fr->AllvsAll_work);
             }
 #  endif /* double/single alt. */
 #else /* no SSE support compiled in */
             nb_kernel_allvsallgb(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,egpol,
-                                 &outeriter,&inneriter,&fr->AllvsAll_work);                    
+                                 &outeriter,&inneriter,&fr->AllvsAll_work);
 #endif
             inc_nrnb(nrnb,eNR_NBKERNEL_ALLVSALLGB,inneriter);
         }
         else
-        { 
+        {
 #if (defined GMX_SSE2 || defined GMX_X86_64_SSE || defined GMX_X86_64_SSE2 || defined GMX_IA32_SSE || defined GMX_IA32_SSE2)
 # ifdef GMX_DOUBLE
             if(fr->UseOptimizedKernels)
@@ -369,37 +369,40 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
                 nb_kernel_allvsall_sse2_double(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
                                                &outeriter,&inneriter,&fr->AllvsAll_work);
             }
-            else 
+            else
             {
                 nb_kernel_allvsall(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
-                                   &outeriter,&inneriter,&fr->AllvsAll_work);            
+                                   &outeriter,&inneriter,&fr->AllvsAll_work);
             }
-            
+
 #  else /* not double */
             if(fr->UseOptimizedKernels)
             {
-                nb_kernel_allvsall_sse2_single(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
+printf("ASC THIS KERNEL");
+                // nb_kernel_allvsall_sse2_single(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
+                //                              &outeriter,&inneriter,&fr->AllvsAll_work);
+                nb_kernel_allvsall(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
                                                &outeriter,&inneriter,&fr->AllvsAll_work);
             }
-            else 
+            else
             {
                 nb_kernel_allvsall(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
-                                   &outeriter,&inneriter,&fr->AllvsAll_work);            
+                                   &outeriter,&inneriter,&fr->AllvsAll_work);
             }
 
 #  endif /* double/single check */
 #else /* No SSE2 support compiled in */
             nb_kernel_allvsall(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
                                &outeriter,&inneriter,&fr->AllvsAll_work);
-#endif            
-            
+#endif
+
             inc_nrnb(nrnb,eNR_NBKERNEL_ALLVSALL,inneriter);
         }
         inc_nrnb(nrnb,eNR_NBKERNEL_OUTER,outeriter);
         return;
     }
-	
-    if (eNL >= 0) 
+
+    if (eNL >= 0)
     {
 		i0 = eNL;
 		i1 = i0+1;
@@ -409,33 +412,32 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
 		i0 = 0;
 		i1 = eNL_NR;
 	}
-	
-	if (nls >= 0) 
+
+	if (nls >= 0)
 	{
 		n0 = nls;
 		n1 = nls+1;
 	}
-	else 
+	else
 	{
 		n0 = 0;
 		n1 = fr->nnblists;
 	}
-	
+
 	if(nb_kernel_list == NULL)
     {
 		gmx_fatal(FARGS,"gmx_setup_kernels has not been called");
     }
-  
+
     fshift = fr->fshift[0];
-  
-	for(n=n0; (n<n1); n++) 
+	for(n=n0; (n<n1); n++)
 	{
 		nblists = &fr->nblists[n];
-		for(i=i0; (i<i1); i++) 
+		for(i=i0; (i<i1); i++)
 		{
 			outeriter = inneriter = 0;
-      
-			if (bLR) 
+
+			if (bLR)
 			{
 				nlist = &(nblists->nlist_lr[i]);
 			}
@@ -443,11 +445,11 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
 			{
 				nlist = &(nblists->nlist_sr[i]);
 			}
-			
-			if (nlist->nri > 0) 
+
+			if (nlist->nri > 0)
 			{
 				nrnb_ind = nlist->il_code;
-				
+
 				if(nrnb_ind==eNR_NBKERNEL_FREE_ENERGY)
 				{
 					/* generic free energy, use combined table */
@@ -462,13 +464,13 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
                     }
 
 					tabletype = nb_kernel_table[nrnb_ind];
-					
+
 					/* normal kernels, not free energy */
 					if (!bDoForces)
 					{
 						nrnb_ind += eNR_NBKERNEL_NR/2;
 					}
-					
+
 					if(tabletype == TABLE_COMBINED)
 					{
 						tabledata = nblists->tab.tab;
@@ -486,16 +488,16 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
 						tabledata = NULL;
 					}
 				}
-				
+
 				nlist->count = 0;
-				
+
 				if(nlist->free_energy)
 				{
 					if(nlist->ivdw==2)
 					{
 						gmx_fatal(FARGS,"Cannot do free energy Buckingham interactions.");
 					}
-					
+
 					gmx_nb_free_energy_kernel(nlist->icoul,
 											  nlist->ivdw,
 											  nlist->nri,
@@ -557,7 +559,7 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
                     if (kernelptr == NULL)
                     {
                         /* Call a generic nonbonded kernel */
-                        
+
                         /* If you want to hack/test your own interactions,
                          * do it in this routine and make sure it is called
                          * by setting the environment variable GMX_NB_GENERIC.
@@ -578,7 +580,7 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
                     else
                     {
                         /* Call nonbonded kernel from function pointer */
-                        
+
                         (*kernelptr)( &(nlist->nri),
                                       nlist->iinr,
                                       nlist->jindex,
@@ -612,9 +614,9 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
                                       (real *)&gbdata);
                     }
                 }
-                
+
                 /* Update flop accounting */
-				
+
 				/* Outer loop in kernel */
                 switch (nlist->enlist) {
                 case enlistATOM_ATOM:   fac =  1; break;
@@ -634,7 +636,7 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
 }
 
 
-real 
+real
 do_listed_vdw_q(int ftype,int nbonds,
                 const t_iatom iatoms[],const t_iparams iparams[],
                 const rvec x[],rvec f[],rvec fshift[],
@@ -664,14 +666,14 @@ do_listed_vdw_q(int ftype,int nbonds,
     t_nblist  tmplist;
     int       icoul,ivdw;
     gmx_bool      bMolPBC,bFreeEnergy;
-    
+
 #if GMX_THREAD_SHM_FDECOMP
     pthread_mutex_t mtx;
 #else
     void *    mtx = NULL;
 #endif
 
-    
+
 #if GMX_THREAD_SHM_FDECOMP
     pthread_mutex_initialize(&mtx);
 #endif
@@ -706,7 +708,7 @@ do_listed_vdw_q(int ftype,int nbonds,
     /* Determine the values for icoul/ivdw. */
     if (fr->bEwald) {
         icoul = 1;
-    } 
+    }
     else if(fr->bcoultab)
     {
         icoul = 3;
@@ -715,11 +717,11 @@ do_listed_vdw_q(int ftype,int nbonds,
     {
         icoul = 2;
     }
-    else 
+    else
     {
         icoul = 1;
     }
-    
+
     if(fr->bvdwtab)
     {
         ivdw = 3;
@@ -728,24 +730,24 @@ do_listed_vdw_q(int ftype,int nbonds,
     {
         ivdw = 2;
     }
-    else 
+    else
     {
         ivdw = 1;
     }
-    
-    
-    /* We don't do SSE or altivec here, due to large overhead for 4-fold 
-     * unrolling on short lists 
+
+
+    /* We don't do SSE or altivec here, due to large overhead for 4-fold
+     * unrolling on short lists
      */
-    
+
     bFreeEnergy = FALSE;
-    for(i=0; (i<nbonds); ) 
+    for(i=0; (i<nbonds); )
     {
         itype = iatoms[i++];
         ai    = iatoms[i++];
         aj    = iatoms[i++];
         gid   = GID(md->cENER[ai],md->cENER[aj],md->nenergrp);
-        
+
         switch (ftype) {
         case F_LJ14:
             bFreeEnergy =
@@ -769,26 +771,26 @@ do_listed_vdw_q(int ftype,int nbonds,
             nbfp = (real *)&(iparams[itype].ljcnb.c6);
             break;
         }
-        
-        if (!bMolPBC) 
+
+        if (!bMolPBC)
         {
             /* This is a bonded interaction, atoms are in the same box */
             shift_f = CENTRAL;
             r2 = distance2(x[ai],x[aj]);
         }
-        else 
+        else
         {
             /* Apply full periodic boundary conditions */
             shift_f = pbc_dx_aiuc(pbc,x[ai],x[aj],dx);
             r2 = norm2(dx);
         }
 
-        if (r2 >= rtab2) 
+        if (r2 >= rtab2)
         {
-            if (!bWarn) 
+            if (!bWarn)
             {
                 fprintf(stderr,"Warning: 1-4 interaction between %d and %d "
-                        "at distance %.3f which is larger than the 1-4 table size %.3f nm\n", 
+                        "at distance %.3f which is larger than the 1-4 table size %.3f nm\n",
 			glatnr(global_atom_index,ai),
 			glatnr(global_atom_index,aj),
 			sqrt(r2), sqrt(rtab2));
@@ -798,7 +800,7 @@ do_listed_vdw_q(int ftype,int nbonds,
                         "or with user tables increase the table size\n");
                 bWarn = TRUE;
             }
-            if (debug) 
+            if (debug)
 	      fprintf(debug,"%8f %8f %8f\n%8f %8f %8f\n1-4 (%d,%d) interaction not within cut-off! r=%g. Ignored\n",
 		      x[ai][XX],x[ai][YY],x[ai][ZZ],
 		      x[aj][XX],x[aj][YY],x[aj][ZZ],
@@ -806,7 +808,7 @@ do_listed_vdw_q(int ftype,int nbonds,
 		      glatnr(global_atom_index,aj),
 		      sqrt(r2));
         }
-        else 
+        else
         {
             copy_rvec(x[ai],x14[0]);
             copy_rvec(x[aj],x14[1]);
@@ -816,7 +818,7 @@ do_listed_vdw_q(int ftype,int nbonds,
             fprintf(debug,"LJ14: grp-i=%2d, grp-j=%2d, ngrp=%2d, GID=%d\n",
                     md->cENER[ai],md->cENER[aj],md->nenergrp,gid);
 #endif
-            
+
 	    outeriter = inneriter = count = 0;
 	    if (bFreeEnergy)
         {
@@ -870,8 +872,8 @@ do_listed_vdw_q(int ftype,int nbonds,
                                       &outeriter,
                                       &inneriter);
         }
-        else 
-        { 
+        else
+        {
             /* Not perturbed - call kernel 330 */
             nb_kernel330
                 ( &i1,
@@ -904,22 +906,22 @@ do_listed_vdw_q(int ftype,int nbonds,
                   (void *)&mtx,
                   &outeriter,
                   &inneriter,
-                  NULL);                
+                  NULL);
         }
-        
+
         /* Add the forces */
         rvec_inc(f[ai],f14[0]);
         rvec_dec(f[aj],f14[0]);
-        
-        if (g) 
+
+        if (g)
         {
             /* Correct the shift forces using the graph */
-            ivec_sub(SHIFT_IVEC(g,ai),SHIFT_IVEC(g,aj),dt);    
+            ivec_sub(SHIFT_IVEC(g,ai),SHIFT_IVEC(g,aj),dt);
             shift_vir = IVEC2IS(dt);
             rvec_inc(fshift[shift_vir],f14[0]);
             rvec_dec(fshift[CENTRAL],f14[0]);
         }
-        
+
 	    /* flops: eNR_KERNEL_OUTER + eNR_KERNEL330 + 12 */
         }
     }
