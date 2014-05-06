@@ -272,7 +272,17 @@ nb_kernel_allvsall(t_forcerec *           fr,
 	ni0                 = mdatoms->start;
 	ni1                 = mdatoms->start+mdatoms->homenr;
 
+
+    real asc_coul = 0.0;
+    real asc_vdw = 0.0;
+    real asc_sum_coul = 0.0;
+    real asc_sum_vdw = 0.0;
+    real asc_master_coul = 0.0;
+    real asc_master_vdw = 0.0;
     aadata = *((gmx_allvsall_data_t **)work);
+
+    printf("ASC: START vctot = %14.10f  vvdw = %14.10f\n", Vc[0], Vvdw[0]);
+    printf("ASC: START vctot = %14.10f  vvdw = %14.10f\n", asc_coul, asc_vdw);
 
 	if(aadata==NULL)
 	{
@@ -297,6 +307,8 @@ nb_kernel_allvsall(t_forcerec *           fr,
 		Vvdwtot           = 0.0;
         vctot             = 0.0;
 
+        asc_coul = 0.0;
+        asc_vdw = 0.0;
 		/* Clear i atom forces */
         fix               = 0.0;
         fiy               = 0.0;
@@ -309,6 +321,7 @@ nb_kernel_allvsall(t_forcerec *           fr,
 
         mask             = aadata->exclusion_mask[i];
 
+        
         /* Prologue part, including exclusion mask */
         for(j=nj0; j<nj1; j++,mask++)
         {
@@ -331,9 +344,6 @@ nb_kernel_allvsall(t_forcerec *           fr,
                 rinv              = gmx_invsqrt(rsq);
                 rinvsq            = rinv*rinv;
 
-                real asc_r = 10.0/rinv;
-                printf("ASC: r = %7.3f\n", asc_r);
-
                 /* Load parameters for j atom */
                 qq                = iq*charge[k];
                 c6                = pvdw[2*k];
@@ -350,6 +360,19 @@ nb_kernel_allvsall(t_forcerec *           fr,
                 Vvdwtot           = Vvdwtot+Vvdw12-Vvdw6;
                 fscal             = (vcoul+12.0*Vvdw12-6.0*Vvdw6)*rinvsq;
 
+            real asc_r = 10.0/rinv;
+            // printf("ASC: r = %7.3f\n", asc_r);
+            printf("ASC: L1 %4d %4d   r = %7.3f   \
+xyz = %7.3f %7.3f %7.3f  q1 = %6.3f  q2 = %6.3f  qq = %7.3f ecoul = %7.3f  c6 = %18.14f  c12 = %18.14f  evdw = %14.10f\n",
+                    i, k, asc_r, jx*10.0, jy*10.0, jz*10.0,
+                    charge[i], charge[k], qq, vcoul,
+                    c6, c12, Vvdwtot);
+
+                 asc_coul += vcoul;
+                 asc_vdw = asc_vdw + Vvdw12-Vvdw6;
+            asc_sum_coul += vcoul;
+            asc_sum_vdw += Vvdw12 - Vvdw6;
+                 // printf("ASC: DIFF1   delta coul = %14.10f   delta vdw= %14.10f\n", vctot - asc_coul, Vvdwtot -asc_vdw);
                 /* Calculate temporary vectorial force */
                 tx                = fscal*dx;
                 ty                = fscal*dy;
@@ -388,8 +411,6 @@ nb_kernel_allvsall(t_forcerec *           fr,
             rinv              = gmx_invsqrt(rsq);
             rinvsq            = rinv*rinv;
 
-            real asc_r = 10.0/rinv;
-            printf("ASC: r = %7.3f\n", asc_r);
             /* Load parameters for j atom */
             qq                = iq*charge[k];
             c6                = pvdw[2*k];
@@ -406,6 +427,19 @@ nb_kernel_allvsall(t_forcerec *           fr,
             Vvdwtot           = Vvdwtot+Vvdw12-Vvdw6;
             fscal             = (vcoul+12.0*Vvdw12-6.0*Vvdw6)*rinvsq;
 
+            real asc_r = 10.0/rinv;
+            // printf("ASC: r = %7.3f\n", asc_r);
+            printf("ASC: L2 %4d %4d   r = %7.3f   \
+xyz = %7.3f %7.3f %7.3f  q1 = %6.3f  q2 = %6.3f  qq = %7.3f ecoul = %7.3f  c6 = %18.14f  c12 = %18.14f  evdw = %14.10f\n",
+                    i, k, asc_r, jx*10.0, jy*10.0, jz*10.0,
+                    charge[i], charge[k], qq, vcoul,
+                    c6, c12, Vvdwtot);
+
+            asc_coul += vcoul;
+            asc_vdw = asc_vdw + Vvdw12 - Vvdw6;
+            asc_sum_coul += vcoul;
+            asc_sum_vdw += Vvdw12 - Vvdw6;
+            // printf("ASC: DIFF2   delta coul = %14.10f   delta vdw= %14.10f\n", vctot - asc_coul, Vvdwtot -asc_vdw);
             /* Calculate temporary vectorial force */
             tx                = fscal*dx;
             ty                = fscal*dy;
@@ -434,9 +468,17 @@ nb_kernel_allvsall(t_forcerec *           fr,
 		Vc[ggid]         = Vc[ggid] + vctot;
         Vvdw[ggid]       = Vvdw[ggid] + Vvdwtot;
 
+        asc_master_coul += asc_coul;
+        asc_master_vdw += asc_vdw;
+
+        printf("ASC: DIFFgmx delta coul = %14.10f   delta vdw= %14.10f\n", vctot - asc_coul, Vvdwtot -asc_vdw);
+        printf("ASC: DIFFsum delta coul = %14.10f   delta vdw= %14.10f\n", asc_sum_coul - Vc[ggid], asc_sum_vdw - Vvdw[ggid]);
 		/* Outer loop uses 6 flops/iteration */
 	}
 
+    printf("ASC: FINALgmx vctot = %14.10f  vvdw = %14.10f\n", Vc[0], Vvdw[0]);
+    printf("ASC: FINALasc vctot = %14.10f  vvdw = %14.10f\n", asc_master_coul, asc_master_vdw);
+    printf("ASC: FINALsum vctot = %14.10f  vvdw = %14.10f\n", asc_sum_coul, asc_sum_vdw);
     /* Write outer/inner iteration count to pointers */
     *outeriter       = ni1-ni0;
     *inneriter       = (ni1-ni0)*natoms/2;

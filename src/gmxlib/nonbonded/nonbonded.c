@@ -366,7 +366,8 @@ void do_nonbonded(t_commrec *cr,t_forcerec *fr,
 # ifdef GMX_DOUBLE
             if(fr->UseOptimizedKernels)
             {
-                nb_kernel_allvsall_sse2_double(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
+                nb_kernel_allvsall(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
+                //nb_kernel_allvsall_sse2_double(fr,mdatoms,excl,x[0],f[0],egcoul,egnb,
                                                &outeriter,&inneriter,&fr->AllvsAll_work);
             }
             else
