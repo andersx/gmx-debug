@@ -168,13 +168,16 @@ void nb_kernel330(
             fix1             = 0;              
             fiy1             = 0;              
             fiz1             = 0;              
-            
+
             for(k=nj0; (k<nj1); k++)
             {
+
 
                 /* Get j neighbor index, and coordinate index */
                 jnr              = jjnr[k];        
                 j3               = 3*jnr;          
+
+               //  printf("ASC: Neighbour non-bonded: %4d %4d\n", ii, jnr);
 
                 /* load j atom coordinates */
                 jx1              = pos[j3+0];      
@@ -276,6 +279,7 @@ void nb_kernel330(
             Vc[ggid]         = Vc[ggid] + vctot;
             Vvdw[ggid]       = Vvdw[ggid] + Vvdwtot;
 
+            printf("ASC: Neighbour non-bonded: %d %14.10f %14.10f\n", ggid, vctot, Vvdwtot);
             /* Increment number of inner iterations */
             ninner           = ninner + nj1 - nj0;
 

@@ -1006,6 +1006,10 @@ real dih_angle(const rvec xi,const rvec xj,const rvec xk,const rvec xl,
   (*sign)=(ipr<0.0)?-1.0:1.0;
   phi=(*sign)*phi; 			/*  1		*/
 					/* 82 TOTAL	*/
+  printf("ASC: DIHEDRAL ANGLE CALC 1   %7.4f %7.4f %7.4f\n", xi[XX]*10.0, xi[YY]*10.0, xi[ZZ]*10.0);
+  printf("ASC: DIHEDRAL ANGLE CALC 2   %7.4f %7.4f %7.4f\n", xj[XX]*10.0, xj[YY]*10.0, xj[ZZ]*10.0);
+  printf("ASC: DIHEDRAL ANGLE CALC 3   %7.4f %7.4f %7.4f\n", xk[XX]*10.0, xk[YY]*10.0, xk[ZZ]*10.0);
+  printf("ASC: DIHEDRAL ANGLE CALC 4   %7.4f %7.4f %7.4f %5.3f\n", xl[XX]*10.0, xl[YY]*10.0, xl[ZZ]*10.0, phi);
   return phi;
 }
 
@@ -1017,13 +1021,14 @@ void do_dih_fup(int i,int j,int k,int l,real ddphi,
 		const t_pbc *pbc,const t_graph *g,
 		const rvec x[],int t1,int t2,int t3)
 {
+  printf("ASC: DIHEDRAL2\n");
   /* 143 FLOPS */
+
   rvec f_i,f_j,f_k,f_l;
   rvec uvec,vvec,svec,dx_jl;
   real iprm,iprn,nrkj,nrkj2;
   real a,p,q,toler;
   ivec jt,dt_ij,dt_kj,dt_lj;  
-  
   iprm  = iprod(m,m);		/*  5 	*/
   iprn  = iprod(n,n);		/*  5	*/
   nrkj2 = iprod(r_kj,r_kj);	/*  5	*/
@@ -1047,7 +1052,9 @@ void do_dih_fup(int i,int j,int k,int l,real ddphi,
     rvec_dec(f[j],f_j);   	/*  3	*/
     rvec_dec(f[k],f_k);   	/*  3	*/
     rvec_inc(f[l],f_l);   	/*  3	*/
-    
+
+    // printf("%8.4f %8.4f %8.4f\n", f_i[XX], f_i[YY] f_i[ZZ]);
+
     if (g) {
       copy_ivec(SHIFT_IVEC(g,j),jt);
       ivec_sub(SHIFT_IVEC(g,i),jt,dt_ij);
@@ -1074,12 +1081,16 @@ void do_dih_fup(int i,int j,int k,int l,real ddphi,
 real dopdihs(real cpA,real cpB,real phiA,real phiB,int mult,
 	     real phi,real lambda,real *V,real *F)
 {
+  printf("ASC: DIHEDRAL3 PROPER DIHEDRALS calc here\n");
   real v,dvdl,mdphi,v1,sdphi,ddphi;
   real L1   = 1.0 - lambda;
   real ph0  = (L1*phiA + lambda*phiB)*DEG2RAD;
   real dph0 = (phiB - phiA)*DEG2RAD;
   real cp   = L1*cpA + lambda*cpB;
-  
+
+  //ASC: Calculation here: cpA is cp from charmm, phiA is phi0 and mult is mult
+  real v_asc = cpA * cos(mult*phi - phiA * DEG2RAD) + cpA; 
+
   mdphi =  mult*phi - ph0;
   sdphi = sin(mdphi);
   ddphi = -cp*mult*sdphi;
@@ -1087,7 +1098,12 @@ real dopdihs(real cpA,real cpB,real phiA,real phiB,int mult,
   v     = cp*v1;
   
   dvdl  = (cpB - cpA)*v1 + cp*dph0*sdphi;
-  
+
+  printf("ASC: DIHEDRAL PARAMETERS: %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %8.5f %d\n",
+          // phiA, phiB,
+          // cpA, cpB, phiA, phiB, phi, lambda, v,dvdl,mdphi,v1,sdphi,ddphi,L1, ph0,dph0,cp, mult);
+          cpA, cpB, phiA, phiB, phi, v,v_asc,mdphi,v1,sdphi, mult);
+
   *V = v;
   *F = ddphi;
   
@@ -1131,12 +1147,15 @@ real pdihs(int nbonds,
 	   const t_mdatoms *md,t_fcdata *fcd,
 	   int *global_atom_index)
 {
+  printf("ASC: DIHEDRAL4\n");
   int  i,type,ai,aj,ak,al;
   int  t1,t2,t3;
   rvec r_ij,r_kj,r_kl,m,n;
   real phi,sign,ddphi,vpd,vtot;
 
   vtot = 0.0;
+
+  unsigned int i_asc = 0;
 
   for(i=0; (i<nbonds); ) {
     type = forceatoms[i++];
@@ -1147,6 +1166,8 @@ real pdihs(int nbonds,
     
     phi=dih_angle(x[ai],x[aj],x[ak],x[al],pbc,r_ij,r_kj,r_kl,m,n,
                   &sign,&t1,&t2,&t3);			/*  84 		*/
+    i_asc++;
+  printf("ASC: DIHEDRALS9 %4d                %4d %4d %4d %4d\n", i_asc, ai+1, aj+1, ak+1, al+1);
 
     *dvdlambda += dopdihs(forceparams[type].pdihs.cpA,
 			  forceparams[type].pdihs.cpB,
@@ -1159,12 +1180,12 @@ real pdihs(int nbonds,
     do_dih_fup(ai,aj,ak,al,ddphi,r_ij,r_kj,r_kl,m,n,
 	       f,fshift,pbc,g,x,t1,t2,t3);			/* 112		*/
 
-#ifdef DEBUG
-    fprintf(debug,"pdih: (%d,%d,%d,%d) phi=%g\n",
-	    ai,aj,ak,al,phi);
-#endif
+    printf("ASC: DIHEDRAL pdih: (%d,%d,%d,%d) phi=%g     vpd =%f\n",
+	    ai,aj,ak,al,phi,vpd);
+
   } /* 223 TOTAL 	*/
 
+  printf("ASC: DIHEDRALS9 PROPER DIHEDRALS %d   %10.6f\n", nbonds, vtot);
   return vtot;
 }
 
@@ -1178,6 +1199,7 @@ real idihs(int nbonds,
 	   const t_mdatoms *md,t_fcdata *fcd,
 	   int *global_atom_index)
 {
+  printf("ASC: DIHEDRAL5\n");
   int  i,type,ai,aj,ak,al;
   int  t1,t2,t3;
   real phi,phi0,dphi0,ddphi,sign,vtot;
@@ -1232,11 +1254,8 @@ real idihs(int nbonds,
     do_dih_fup(ai,aj,ak,al,(real)(-ddphi),r_ij,r_kj,r_kl,m,n,
 	       f,fshift,pbc,g,x,t1,t2,t3);			/* 112		*/
     /* 217 TOTAL	*/
-#ifdef DEBUG
-    if (debug)
-      fprintf(debug,"idih: (%d,%d,%d,%d) phi=%g\n",
+      printf("idih: (%d,%d,%d,%d) phi=%g\n",
 	      ai,aj,ak,al,phi);
-#endif
   }
   
   *dvdlambda += dvdl;
@@ -1251,6 +1270,7 @@ real posres(int nbonds,
 	    real lambda,real *dvdlambda,
 	    int refcoord_scaling,int ePBC,rvec comA,rvec comB)
 {
+  printf("ASC: DIHEDRAL6\n");
   int  i,ai,m,d,type,ki,npbcdim=0;
   const t_iparams *pr;
   real v,vtot,fm,*fc;
@@ -1470,6 +1490,7 @@ real rbdihs(int nbonds,
 	    const t_mdatoms *md,t_fcdata *fcd,
 	    int *global_atom_index)
 {
+  printf("ASC: DIHEDRAL7\n");
   const real c0=0.0,c1=1.0,c2=2.0,c3=3.0,c4=4.0,c5=5.0;
   int  type,ai,aj,ak,al,i,j;
   int  t1,t2,t3;
@@ -2533,10 +2554,8 @@ real tab_dihs(int nbonds,
     do_dih_fup(ai,aj,ak,al,-ddphi,r_ij,r_kj,r_kl,m,n,
 	       f,fshift,pbc,g,x,t1,t2,t3);			/* 112	*/
 
-#ifdef DEBUG
-    fprintf(debug,"pdih: (%d,%d,%d,%d) phi=%g\n",
+    printf("pdih2: (%d,%d,%d,%d) phi=%g\n",
 	    ai,aj,ak,al,phi);
-#endif
   } /* 227 TOTAL 	*/
 
   return vtot;

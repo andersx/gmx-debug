@@ -83,7 +83,7 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-am__libgmx_la_SOURCES_DIST = 3dview.c atomprop.c bondfree.c \
+am__libgmx_d_la_SOURCES_DIST = 3dview.c atomprop.c bondfree.c \
 	calcgrid.c calch.c chargegroup.c checkpoint.c confio.c \
 	copyrite.c disre.c do_fit.c enxio.c ewald_util.c ffscanf.c \
 	filenm.c futil.c gbutil.c gmx_fatal.c gmx_sort.c gmxcpp.c \
@@ -101,7 +101,7 @@ am__libgmx_la_SOURCES_DIST = 3dview.c atomprop.c bondfree.c \
 	gmx_system_xdr.c md5.c vmdio.c vmddlopen.c sighandler.c oenv.c \
 	gmxfio_rw.c gmxfio_asc.c gmxfio_bin.c gmxfio_xdr.c version.c
 am__objects_1 = version.lo
-am_libgmx_la_OBJECTS = 3dview.lo atomprop.lo bondfree.lo \
+am_libgmx_d_la_OBJECTS = 3dview.lo atomprop.lo bondfree.lo \
 	calcgrid.lo calch.lo chargegroup.lo checkpoint.lo confio.lo \
 	copyrite.lo disre.lo do_fit.lo enxio.lo ewald_util.lo \
 	ffscanf.lo filenm.lo futil.lo gbutil.lo gmx_fatal.lo \
@@ -119,10 +119,10 @@ am_libgmx_la_OBJECTS = 3dview.lo atomprop.lo bondfree.lo \
 	gmx_cyclecounter.lo gmx_system_xdr.lo md5.lo vmdio.lo \
 	vmddlopen.lo sighandler.lo oenv.lo gmxfio_rw.lo gmxfio_asc.lo \
 	gmxfio_bin.lo gmxfio_xdr.lo $(am__objects_1)
-libgmx_la_OBJECTS = $(am_libgmx_la_OBJECTS)
-libgmx_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+libgmx_d_la_OBJECTS = $(am_libgmx_d_la_OBJECTS)
+libgmx_d_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(libgmx_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(libgmx_d_la_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I. -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -136,8 +136,8 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libgmx_la_SOURCES)
-DIST_SOURCES = $(am__libgmx_la_SOURCES_DIST)
+SOURCES = $(libgmx_d_la_SOURCES)
+DIST_SOURCES = $(am__libgmx_d_la_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -216,7 +216,7 @@ EXEEXT =
 F77 = 
 F77LINK = $(LINK)
 FFLAGS = 
-FFT_LIBS = -lfftw3f
+FFT_LIBS = -lfftw3
 FLIBS = 
 GREP = /bin/grep
 GSL_LIBS = 
@@ -229,7 +229,7 @@ INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LDFLAGS =   
 LIBOBJS = 
 LIBS = -lnsl -lm  
-LIBSUFFIX = 
+LIBSUFFIX = _d
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LMKL = 
 LN_S = ln -s
@@ -247,8 +247,8 @@ PACKAGE_TARNAME = gromacs
 PACKAGE_URL = 
 PACKAGE_VERSION = 4.5
 PATH_SEPARATOR = :
-PKG_CFLAGS =  -DGMX_SOFTWARE_INVSQRT -DGMX_THREADS
-PKG_FFT = fftw3f
+PKG_CFLAGS =  -DGMX_DOUBLE -DGMX_SOFTWARE_INVSQRT -DGMX_THREADS
+PKG_FFT = fftw3
 PKG_FFT_LIBS = 
 PKG_GSL = 
 PKG_XML = libxml-2.0
@@ -311,7 +311,7 @@ mkdir_p = /bin/mkdir -p
 oldincludedir = /usr/include
 pdfdir = ${docdir}
 prefix = /usr/local/gromacs
-program_transform_name = s,x,x,
+program_transform_name = s,$$,_d,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
@@ -331,19 +331,19 @@ SUBDIRS = nonbonded selection statistics trajana $(THREAD_MPI_DIR) \
 	  $(BLAS_DIR) $(LAPACK_DIR)
 
 AM_CPPFLAGS = -I$(top_srcdir)/include -DGMXLIBDIR=\"$(datadir)/top\"
-lib_LTLIBRARIES = libgmx.la
+lib_LTLIBRARIES = libgmx_d.la
 
 #
 # Use a utility library for all the nonbonded kernels and wrapper routines.
 #
-libgmx_la_LIBADD = nonbonded/libnonbonded.la         \
+libgmx_d_la_LIBADD = nonbonded/libnonbonded.la         \
 				    selection/libselection.la \
 				    statistics/libstatistics.la \
 				    trajana/libtrajana.la \
 				    $(THREAD_MPI_LIBOBJS) \
 	                            $(BLAS_LIBOBJS) $(LAPACK_LIBOBJS)
 
-libgmx_la_DEPENDENCIES = nonbonded/libnonbonded.la         \
+libgmx_d_la_DEPENDENCIES = nonbonded/libnonbonded.la         \
 				    selection/libselection.la \
 				    statistics/libstatistics.la \
 				    trajana/libtrajana.la \
@@ -353,8 +353,8 @@ libgmx_la_DEPENDENCIES = nonbonded/libnonbonded.la         \
 
 #	
 #
-libgmx_la_LDFLAGS = -no-undefined -version-info 6:0:0 $(PTHREAD_LIBS)
-libgmx_la_SOURCES = 3dview.c atomprop.c bondfree.c \
+libgmx_d_la_LDFLAGS = -no-undefined -version-info 6:0:0 $(PTHREAD_LIBS)
+libgmx_d_la_SOURCES = 3dview.c atomprop.c bondfree.c \
 	calcgrid.c calch.c chargegroup.c checkpoint.c confio.c \
 	copyrite.c disre.c do_fit.c enxio.c ewald_util.c ffscanf.c \
 	filenm.c futil.c gbutil.c gmx_fatal.c gmx_sort.c gmxcpp.c \
@@ -373,7 +373,7 @@ libgmx_la_SOURCES = 3dview.c atomprop.c bondfree.c \
 	gmxfio_rw.c gmxfio_asc.c gmxfio_bin.c gmxfio_xdr.c \
 	$(am__append_1)
 pkgconfigdir = ${libdir}/pkgconfig
-pkgconfig_DATA = libgmx.pc
+pkgconfig_DATA = libgmx_d.pc
 
 # clean all libtool libraries, since the target names might have changed
 CLEANFILES = *.la *~ \\\ $(am__append_2)
@@ -445,8 +445,8 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libgmx.la: $(libgmx_la_OBJECTS) $(libgmx_la_DEPENDENCIES) $(EXTRA_libgmx_la_DEPENDENCIES) 
-	$(libgmx_la_LINK) -rpath $(libdir) $(libgmx_la_OBJECTS) $(libgmx_la_LIBADD) $(LIBS)
+libgmx_d.la: $(libgmx_d_la_OBJECTS) $(libgmx_d_la_DEPENDENCIES) $(EXTRA_libgmx_d_la_DEPENDENCIES) 
+	$(libgmx_d_la_LINK) -rpath $(libdir) $(libgmx_d_la_OBJECTS) $(libgmx_d_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

@@ -684,12 +684,15 @@ do_listed_vdw_q(int ftype,int nbonds,
     switch (ftype) {
     case F_LJ14:
     case F_LJC14_Q:
+        printf("ASC: F_LJ14 or F_LJC14_Q detected\n");
         eps = fr->epsfac*fr->fudgeQQ;
         ntype  = 1;
         egnb   = grppener->ener[egLJ14];
         egcoul = grppener->ener[egCOUL14];
         break;
     case F_LJC_PAIRS_NB:
+        printf("ASC: F_LJC_PAIRS_NB detected\n");
+        eps = fr->epsfac*fr->fudgeQQ;
         eps = fr->epsfac;
         ntype  = 1;
         egnb   = grppener->ener[egLJSR];
@@ -751,6 +754,7 @@ do_listed_vdw_q(int ftype,int nbonds,
 
         switch (ftype) {
         case F_LJ14:
+            printf("ASC: F_LJ14 parameters detected\n");
             bFreeEnergy =
                 (fr->efep != efepNO &&
                  ((md->nPerturbed && (md->bPerturbed[ai] || md->bPerturbed[aj])) ||
@@ -759,8 +763,12 @@ do_listed_vdw_q(int ftype,int nbonds,
             chargeA[0] = md->chargeA[ai];
             chargeA[1] = md->chargeA[aj];
             nbfp = (real *)&(iparams[itype].lj14.c6A);
+
+            printf("ASC: F_LJ14 %4d %4d    %5.3f %5.3f\n", ai, aj, chargeA[0], chargeA[1]);
+
             break;
         case F_LJC14_Q:
+            printf("ASC: F_LJ14_Q parameters detected\n");
             eps = fr->epsfac*iparams[itype].ljc14.fqq;
             chargeA[0] = iparams[itype].ljc14.qi;
             chargeA[1] = iparams[itype].ljc14.qj;
@@ -875,6 +883,7 @@ do_listed_vdw_q(int ftype,int nbonds,
         }
         else
         {
+            printf("ASC: nb_kernel330\n");
             /* Not perturbed - call kernel 330 */
             nb_kernel330
                 ( &i1,
